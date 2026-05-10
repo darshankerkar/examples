@@ -70,24 +70,24 @@ func (d *Detector) Analyze(reading driver.SensorReading) AnomalyResult {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	if len(d.window) < 5 {
+		d.window = append(d.window, reading)
+		return AnomalyResult{}
+	}
+
+	vibMean, vibStd, tempMean, tempStd := calcStats(d.window)
+
+	vibZ := zScore(reading.Vibration, vibMean, vibStd)
+	tempZ := zScore(reading.Temperature, tempMean, tempStd)
+	maxZ := math.Max(math.Abs(vibZ), math.Abs(tempZ))
+
+	// Update window after analysis to avoid masking effect
 	if len(d.window) >= d.windowSize {
 		copy(d.window, d.window[1:])
 		d.window[d.windowSize-1] = reading
 	} else {
 		d.window = append(d.window, reading)
 	}
-
-	// need 5+ readings to start
-	if len(d.window) < 5 {
-		return AnomalyResult{}
-	}
-
-	vibMean, vibStd := meanStd(d.window, func(r driver.SensorReading) float64 { return r.Vibration })
-	tempMean, tempStd := meanStd(d.window, func(r driver.SensorReading) float64 { return r.Temperature })
-
-	vibZ := zScore(reading.Vibration, vibMean, vibStd)
-	tempZ := zScore(reading.Temperature, tempMean, tempStd)
-	maxZ := math.Max(math.Abs(vibZ), math.Abs(tempZ))
 
 	isAnomaly := maxZ > d.zScoreThreshold
 	confidence := math.Min(1.0, maxZ/d.zScoreThreshold/2)
@@ -113,28 +113,31 @@ func (d *Detector) WindowStats() (vibMean, vibStd, tempMean, tempStd float64, n 
 		return
 	}
 	n = len(d.window)
-	vibMean, vibStd = meanStd(d.window, func(r driver.SensorReading) float64 { return r.Vibration })
-	tempMean, tempStd = meanStd(d.window, func(r driver.SensorReading) float64 { return r.Temperature })
+	vibMean, vibStd, tempMean, tempStd = calcStats(d.window)
 	return
 }
 
-func meanStd(window []driver.SensorReading, f func(driver.SensorReading) float64) (mean, std float64) {
+func calcStats(window []driver.SensorReading) (vibMean, vibStd, tempMean, tempStd float64) {
+	var m2Vib, m2Temp float64
+	for i, r := range window {
+		n := float64(i + 1)
+		dv := r.Vibration - vibMean
+		dt := r.Temperature - tempMean
+		vibMean += dv / n
+		tempMean += dt / n
+		m2Vib += dv * (r.Vibration - vibMean)
+		m2Temp += dt * (r.Temperature - tempMean)
+	}
 	n := float64(len(window))
-	for _, r := range window {
-		mean += f(r)
+	if n > 0 {
+		vibStd = math.Sqrt(m2Vib / n)
+		tempStd = math.Sqrt(m2Temp / n)
 	}
-	mean /= n
-	for _, r := range window {
-		d := f(r) - mean
-		std += d * d
-	}
-	std = math.Sqrt(std / n)
 	return
 }
 
 func zScore(value, mean, std float64) float64 {
-	if std < 1e-10 {
-		return 0
-	}
+	// Add noise floor to prevent division by zero and allow spike detection in stable data
+	std = math.Max(std, 1e-4)
 	return (value - mean) / std
 }
