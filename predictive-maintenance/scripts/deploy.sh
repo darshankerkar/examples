@@ -50,7 +50,7 @@ log_info "Device CRDs applied."
 # Step 3: Deploy the mapper to the edge node
 # ---------------------------------------------------------------------------
 log_info "Step 3: Deploying predictive maintenance mapper to edge node..."
-sed "s/edge-node-01/${EDGE_NODE}/g" "${REPO_ROOT}/manifests/mapper-deployment.yaml" | kubectl apply -f -
+kubectl apply -f "${REPO_ROOT}/manifests/mapper-deployment.yaml"
 
 # Wait for mapper pod to be running
 log_info "Waiting for mapper pod to become Running..."

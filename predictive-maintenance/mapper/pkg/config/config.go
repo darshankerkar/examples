@@ -36,6 +36,7 @@ type DMIConfig struct {
 	Protocol        string `json:"protocol"`
 	DeviceNamespace string `json:"deviceNamespace"`
 	DeviceName      string `json:"deviceName"`
+	TimeoutSec      int    `json:"timeoutSec"`
 }
 
 // SensorConfig holds simulation parameters.
@@ -56,6 +57,7 @@ func DefaultConfig() *Config {
 			Protocol:        "virtual-sensor",
 			DeviceNamespace: "default",
 			DeviceName:      "factory-sensor-01",
+			TimeoutSec:      5,
 		},
 		SensorConfig: SensorConfig{
 			BaseVibration:      0.5,

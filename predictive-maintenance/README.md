@@ -118,7 +118,7 @@ sed "s/edge-node-01/${EDGE_NODE}/" configs/device.yaml | kubectl apply -f -
 ### 2. Deploy the Mapper to the Edge Node
 
 ```bash
-sed "s/edge-node-01/${EDGE_NODE}/" manifests/mapper-deployment.yaml | kubectl apply -f -
+kubectl apply -f manifests/mapper-deployment.yaml
 
 # Wait for mapper to start
 kubectl rollout status deployment/predictive-maintenance-mapper

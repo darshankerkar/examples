@@ -37,18 +37,16 @@ type SensorReading struct {
 
 // VirtualSensor simulates a factory sensor.
 type VirtualSensor struct {
-	cfg    config.SensorConfig
-	rng    *rand.Rand
-	mu     sync.Mutex
-	window []SensorReading
+	cfg config.SensorConfig
+	rng *rand.Rand
+	mu  sync.Mutex
 }
 
 // NewVirtualSensor returns a new virtual sensor.
 func NewVirtualSensor(cfg config.SensorConfig) *VirtualSensor {
 	return &VirtualSensor{
-		cfg:    cfg,
-		rng:    rand.New(rand.NewSource(time.Now().UnixNano())),
-		window: make([]SensorReading, 0, 20),
+		cfg: cfg,
+		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -80,18 +78,6 @@ func (v *VirtualSensor) Read() SensorReading {
 		IsAnomaly:   isAnomaly,
 	}
 
-	if len(v.window) >= 20 {
-		v.window = v.window[1:]
-	}
-	v.window = append(v.window, reading)
 	return reading
 }
 
-// RecentReadings returns the rolling window copy.
-func (v *VirtualSensor) RecentReadings() []SensorReading {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-	result := make([]SensorReading, len(v.window))
-	copy(result, v.window)
-	return result
-}

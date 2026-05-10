@@ -19,9 +19,8 @@ spec:
         app: predictive-maintenance
         component: mapper
     spec:
-      # Schedule this pod on the edge node (NOT the cloud)
-      nodeName: edge-node-01    # <-- replace with your actual edge node name
-      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
       containers:
         - name: mapper
           image: kubeedge/predictive-maintenance-mapper:latest

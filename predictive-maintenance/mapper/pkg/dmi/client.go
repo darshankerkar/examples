@@ -57,7 +57,11 @@ func NewClient(cfg config.DMIConfig) (*Client, error) {
 
 // Register announces this mapper to EdgeCore.
 func (c *Client) Register(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	timeout := c.cfg.TimeoutSec
+	if timeout <= 0 {
+		timeout = 5
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
 	req := &pb.MapperRegisterRequest{
@@ -97,7 +101,11 @@ func (c *Client) ReportStatus(ctx context.Context, r driver.SensorReading) error
 		},
 	}
 
-	rCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	timeout := c.cfg.TimeoutSec
+	if timeout <= 0 {
+		timeout = 5
+	}
+	rCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
 	if _, err := c.client.ReportDeviceStatus(rCtx, req); err != nil {

@@ -71,9 +71,11 @@ func (d *Detector) Analyze(reading driver.SensorReading) AnomalyResult {
 	defer d.mu.Unlock()
 
 	if len(d.window) >= d.windowSize {
-		d.window = d.window[1:]
+		copy(d.window, d.window[1:])
+		d.window[d.windowSize-1] = reading
+	} else {
+		d.window = append(d.window, reading)
 	}
-	d.window = append(d.window, reading)
 
 	// need 5+ readings to start
 	if len(d.window) < 5 {
