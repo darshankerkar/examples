@@ -57,16 +57,24 @@ func main() {
 		klog.Fatalf("mapper register failed: %v", err)
 	}
 
-	go runLoop(ctx, sensor, detector, client, cfg.ReportIntervalSec)
+	done := make(chan struct{})
+	go func() {
+		runLoop(ctx, sensor, detector, client, cfg.ReportIntervalSec)
+		close(done)
+	}()
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 	<-sigCh
 	cancel()
-	time.Sleep(500 * time.Millisecond)
+	<-done
+	_ = client.Close()
 }
 
 func runLoop(ctx context.Context, sensor *driver.VirtualSensor, detector *inference.Detector, client *dmi.Client, interval int) {
+	if interval <= 0 {
+		interval = 5
+	}
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 	for {

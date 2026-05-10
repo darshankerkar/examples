@@ -90,9 +90,9 @@ func (c *Client) ReportStatus(ctx context.Context, r driver.SensorReading) error
 		DeviceNamespace: c.cfg.DeviceNamespace,
 		ReportedDevice: &pb.DeviceStatus{
 			Twins: []*pb.Twin{
-				{PropertyName: "vibration", Reported: &pb.TwinProperty{Value: vib}, ObservedDesired: &pb.TwinProperty{Value: vib}},
-				{PropertyName: "temperature", Reported: &pb.TwinProperty{Value: tmp}, ObservedDesired: &pb.TwinProperty{Value: tmp}},
-				{PropertyName: "anomaly-detected", Reported: &pb.TwinProperty{Value: ano}, ObservedDesired: &pb.TwinProperty{Value: ano}},
+				{PropertyName: "vibration", Reported: &pb.TwinProperty{Value: vib}},
+				{PropertyName: "temperature", Reported: &pb.TwinProperty{Value: tmp}},
+				{PropertyName: "anomaly-detected", Reported: &pb.TwinProperty{Value: ano}},
 			},
 		},
 	}
